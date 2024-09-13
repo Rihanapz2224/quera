@@ -1,0 +1,18 @@
+# تعریف تابع برای بررسی هم‌سطر یا هم‌ستون بودن
+def check_position(x1, y1, x2, y2):
+    # اگر مصطفی و رئیسش در یک سطر باشند (یعنی y1 == y2)
+    if y1 == y2:
+        print("horizontal")
+    # اگر مصطفی و رئیسش در یک ستون باشند (یعنی x1 == x2)
+    elif x1 == x2:
+        print("vertical")
+    # در غیر این صورت، نه در یک سطر و نه در یک ستون هستند
+    else:
+        print("try again")
+
+# گرفتن مختصات مصطفی و رئیسش از ورودی
+x1, y1 = map(int, input("(x1 y1): ").split())
+x2, y2 = map(int, input("(x2 y2): ").split())
+
+# بررسی اینکه کجا ان
+check_position(x1, y1, x2, y2)
