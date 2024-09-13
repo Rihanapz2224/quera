@@ -1,0 +1,14 @@
+# تابع برای ساخت مثلث
+def is_triangle(angle1, angle2, angle3):
+    # اگر مجموع سه زاویه برابر ۱۸۰ درجه باشد، می‌توان مثلث ساخت
+    if angle1 + angle2 + angle3 == 180:
+        print("yes")
+    # در غیر این صورت نمی‌توان مثلث ساخت
+    else:
+        print("no")
+
+# گرفتن ورودی سه زاویه از کاربر
+angle1, angle2, angle3 = map(int, input().split())
+
+# بررسی امکان ساخت مثلث
+is_triangle(angle1, angle2, angle3)
