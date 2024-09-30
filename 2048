@@ -1,0 +1,221 @@
+import tkinter as tk
+import random
+
+# تنظیمات اصلی بازی
+GRID_SIZE = 4  
+# اندازه گرید
+BACKGROUND_COLOR = "#FFB07C"  
+# رنگ پس‌زمینه هلویی
+CELL_COLOR = "#A8E6CF"  
+# رنگ سلول‌ها سبز پاستلی
+ENGLISH_FONT = ("Times New Roman", 24, "bold")  
+# فونت انگلیسی زیبا
+PERSIAN_FONT = ("B Nazanin", 24, "bold")  
+# فونت فارسی زیبا
+ANIMATION_SPEED = 10  
+# سرعت انیمیشن
+
+class Game2048:
+    """ کلاس اصلی برای بازی 2048 """
+    
+    def __init__(self, root):
+        """ 
+        سازنده کلاس بازی 
+        root: پنجره اصلی tkinter
+        """
+        self.root = root
+        self.root.title("بازی 2048")
+        self.game_over = False
+        self.grid = [[0] * GRID_SIZE for _ in range(GRID_SIZE)]  
+        # ساخت گرید 4x4
+        self.score = 0
+        self.create_gui()
+        self.start_game()
+        self.root.bind("<Key>", self.on_key_press)
+        
+    def create_gui(self):
+        """ 
+        ساخت رابط کاربری گرافیکی 
+        """
+        self.main_frame = tk.Frame(self.root, bg=BACKGROUND_COLOR)
+        self.main_frame.grid(sticky=tk.NSEW)
+        self.cells = []
+        
+        for i in range(GRID_SIZE):
+            row = []
+            for j in range(GRID_SIZE):
+                cell_frame = tk.Frame(self.main_frame, bg=BACKGROUND_COLOR, width=100, height=100)
+                cell_frame.grid(row=i, column=j, padx=5, pady=5)
+                cell_label = tk.Label(cell_frame, text="", bg=CELL_COLOR, font=ENGLISH_FONT, width=4, height=2)
+                cell_label.grid()
+                row.append(cell_label)
+            self.cells.append(row)
+    
+    def start_game(self):
+        """ 
+        شروع بازی با دو عدد اولیه در گرید 
+        """
+        self.add_random_tile()
+        self.add_random_tile()
+        self.update_gui()
+    
+    def add_random_tile(self):
+        """ 
+        افزودن یک عدد تصادفی 2 یا 4 به یک خانه خالی 
+        """
+        empty_cells = [(i, j) for i in range(GRID_SIZE) for j in range(GRID_SIZE) if self.grid[i][j] == 0]
+        if empty_cells:
+            i, j = random.choice(empty_cells)
+            self.grid[i][j] = random.choice([2, 4])
+    
+    def update_gui(self):
+        """ 
+        به‌روزرسانی رابط کاربری بر اساس گرید فعلی 
+        """
+        for i in range(GRID_SIZE):
+            for j in range(GRID_SIZE):
+                value = self.grid[i][j]
+                if value == 0:
+                    self.cells[i][j].config(text="", bg=CELL_COLOR)
+                else:
+                    # اگر عدد فارسی است، از فونت فارسی استفاده کن
+                    if self.is_persian(value):
+                        self.cells[i][j].config(text=str(value), bg=CELL_COLOR, font=PERSIAN_FONT)
+                    else:
+                        self.cells[i][j].config(text=str(value), bg=CELL_COLOR, font=ENGLISH_FONT)
+    
+    def is_persian(self, value):
+        """ 
+        بررسی اینکه آیا عدد فارسی است یا نه
+        """
+        return any("۰" <= char <= "۹" for char in str(value))
+    
+    def on_key_press(self, event):
+        """ 
+        مدیریت فشار کلیدهای جهت‌دار برای حرکت دادن اعداد 
+        """
+        if self.game_over:
+            return
+        
+        key = event.keysym
+        if key == "Up":
+            self.move_up()
+        elif key == "Down":
+            self.move_down()
+        elif key == "Left":
+            self.move_left()
+        elif key == "Right":
+            self.move_right()
+        
+        self.add_random_tile()
+        self.animate()
+    
+    def move_up(self):
+        """ 
+        حرکت اعداد به سمت بالا 
+        """
+        for j in range(GRID_SIZE):
+            self.move_column(j, reverse=False)
+    
+    def move_down(self):
+        """ 
+        حرکت اعداد به سمت پایین 
+        """
+        for j in range(GRID_SIZE):
+            self.move_column(j, reverse=True)
+    
+    def move_left(self):
+        """ 
+        حرکت اعداد به سمت چپ 
+        """
+        for i in range(GRID_SIZE):
+            self.move_row(i, reverse=False)
+    
+    def move_right(self):
+        """ 
+        حرکت اعداد به سمت راست 
+        """
+        for i in range(GRID_SIZE):
+            self.move_row(i, reverse=True)
+    
+    def move_row(self, row, reverse=False):
+        """ 
+        حرکت یک سطر از گرید به چپ یا راست 
+        """
+        values = [self.grid[row][j] for j in range(GRID_SIZE)]
+        if reverse:
+            values.reverse()
+        merged_values = self.merge(values)
+        if reverse:
+            merged_values.reverse()
+        self.grid[row] = merged_values
+    
+    def move_column(self, col, reverse=False):
+        """ 
+        حرکت یک ستون از گرید به بالا یا پایین 
+        """
+        values = [self.grid[i][col] for i in range(GRID_SIZE)]
+        if reverse:
+            values.reverse()
+        merged_values = self.merge(values)
+        if reverse:
+            merged_values.reverse()
+        for i in range(GRID_SIZE):
+            self.grid[i][col] = merged_values[i]
+    
+    def merge(self, values):
+        """ 
+        ترکیب اعداد همسان در یک ردیف یا ستون 
+        """
+        non_zero = [value for value in values if value != 0]
+        merged = []
+        skip = False
+        for i in range(len(non_zero)):
+            if skip:
+                skip = False
+                continue
+            if i + 1 < len(non_zero) and non_zero[i] == non_zero[i + 1]:
+                merged.append(non_zero[i] * 2)
+                self.score += non_zero[i] * 2
+                skip = True
+            else:
+                merged.append(non_zero[i])
+        merged += [0] * (GRID_SIZE - len(merged))
+        return merged
+    
+    def animate(self):
+        """ 
+        مدیریت انیمیشن جابجایی اعداد 
+        """
+        for i in range(GRID_SIZE):
+            for j in range(GRID_SIZE):
+                self.cells[i][j].place_configure(x=i*120, y=j*120)
+                self.root.after(ANIMATION_SPEED)
+        self.update_gui()
+    
+    def check_game_over(self):
+        """ 
+        بررسی پایان بازی (بدون حرکت ممکن) 
+        """
+        for i in range(GRID_SIZE):
+            for j in range(GRID_SIZE):
+                if self.grid[i][j] == 0:
+                    return False
+                if j + 1 < GRID_SIZE and self.grid[i][j] == self.grid[i][j + 1]:
+                    return False
+                if i + 1 < GRID_SIZE and self.grid[i][j] == self.grid[i + 1][j]:
+                    return False
+        return True
+    
+    def show_game_over(self):
+        """ 
+        نمایش پیام پایان بازی 
+        """
+        game_over_label = tk.Label(self.main_frame, text="بازی تمام شد", font=PERSIAN_FONT, bg=BACKGROUND_COLOR)
+        game_over_label.grid(row=2, column=0, columnspan=GRID_SIZE, padx=5, pady=5)
+        print("Game Over! Your score:", self.score)
+
+# ایجاد پنجره اصلی
+root = tk.Tk()
+game = Game2048(root)
+root.mainloop()
